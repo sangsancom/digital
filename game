@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스미싱 & 피싱 탐지 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 90%;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .score-item {
+            text-align: center;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .scenario {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff6b6b;
+        }
+        
+        .sms-message {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            position: relative;
+        }
+        
+        .sms-message::before {
+            content: "📱 SMS";
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #2196f3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        
+        .website-preview {
+            border: 2px solid #ff5722;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #fff3e0;
+            position: relative;
+        }
+        
+        .website-preview::before {
+            content: "🌐 웹사이트";
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #ff5722;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        
+        .url-bar {
+            background: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+        
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .choice-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+        }
+        
+        .choice-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .choice-btn.safe {
+            background: linear-gradient(135deg, #00b894, #00a085);
+        }
+        
+        .choice-btn.danger {
+            background: linear-gradient(135deg, #e17055, #d63031);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .result.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result.wrong {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+            font-weight: normal;
+        }
+        
+        .warning-signs {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning-signs h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .warning-signs ul {
+            color: #856404;
+            padding-left: 20px;
+        }
+        
+        .next-btn {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .next-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #00b894, #00a085);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .damage-report {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .damage-report h4 {
+            color: #721c24;
+            margin-bottom: 10px;
+        }
+        
+        .final-score {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #fd79a8, #fdcb6e);
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .final-score h2 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🛡️ 스미싱 & 피싱 탐지 게임</h1>
+            <p>실제 사례를 통해 온라인 사기를 식별하는 방법을 배워보세요!</p>
+            <div class="score-board">
+                <div class="score-item">
+                    <div>점수</div>
+                    <div id="score">0</div>
+                </div>
+                <div class="score-item">
+                    <div>생명</div>
+                    <div id="lives">❤️❤️❤️</div>
+                </div>
+                <div class="score-item">
+                    <div>레벨</div>
+                    <div id="level">1</div>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+        </div>
+        
+        <div class="content" id="content">
+            <!-- 게임 내용이 여기에 동적으로 로드됩니다 -->
+        </div>
+    </div>
+
+    <script>
+        class PhishingGame {
+            constructor() {
+                this.score = 0;
+                this.lives = 3;
+                this.currentLevel = 0;
+                this.gameData = this.initializeGameData();
+                this.init();
+            }
+            
+            initializeGameData() {
+                return [
+                    {
+                        type: 'sms',
+                        title: '택배 배송 알림 문자',
+                        content: `[한진택배] 고객님의 택배가 배송 중입니다. 
+주소 확인이 필요합니다.
+▼확인하기▼
+http://hanjin-delivery.co.kr/check?id=4829573
+                        
+* 24시간 내 확인하지 않으면 반송됩니다.`,
+                        isPhishing: true,
+                        warningSigns: [
+                            '의심스러운 도메인 (hanjin-delivery.co.kr)',
+                            '긴급성을 조장하는 문구',
+                            '개인정보 입력을 요구하는 링크',
+                            '정확한 받는 사람 정보 없음'
+                        ],
+                        damage: '개인정보 유출, 계좌 정보 탈취, 추가 스미싱 문자 발송',
+                        correctChoice: 'danger'
+                    },
+                    {
+                        type: 'website',
+                        title: '무료 웹툰 다운로드 사이트',
+                        url: 'http://free-webtoon-down.net/download',
+                        content: `🎉 인기 웹툰 무료 다운로드! 🎉
+                        
+✨ 최신 웹툰 10,000편 무료!
+✨ 광고 없이 깔끔한 뷰어!
+✨ PC/모바일 동시 지원!
+
+📱 회원가입만 하면 바로 다운로드!
+이름: [_________]
+휴대폰: [_________] 
+생년월일: [_________]
+카드번호: [_________] (결제 확인용)
+
+[무료 회원가입하기]`,
+                        isPhishing: true,
+                        warningSigns: [
+                            '저작권 보호 콘텐츠 무료 제공',
+                            '불필요한 개인정보 수집',
+                            '카드번호 요구 (결제 확인용이라는 핑계)',
+                            '의심스러운 도메인'
+                        ],
+                        damage: '카드 정보 탈취, 개인정보 판매, 불법 결제 발생',
+                        correctChoice: 'danger'
+                    },
+                    {
+                        type: 'sms',
+                        title: '은행 보안 인증 문자',
+                        content: `[국민은행] 
+보안상 긴급 인증이 필요합니다.
+5분 내 인증하지 않으면 계좌가 정지됩니다.
+
+인증번호: 847392
+▼즉시 인증하기▼
+http://kb-bank-security.com/auth
+
+고객센터: 1588-9999`,
+                        isPhishing: true,
+                        warningSigns: [
+                            '계좌 정지 협박으로 긴급상황 연출',
+                            '가짜 도메인 (kb-bank-security.com)',
+                            '인증번호를 문자로 미리 제공',
+                            '실제 은행은 이런 방식으로 인증하지 않음'
+                        ],
+                        damage: '계좌 비밀번호 탈취, 예금 인출, 대출 신청',
+                        correctChoice: 'danger'
+                    },
+                    {
+                        type: 'website',
+                        title: '공공기관 예방접종 예약 사이트',
+                        url: 'https://ncdc.go.kr/vaccination/reserve',
+                        content: `질병관리청 코로나19 예방접종 예약
+
+📍 예약 가능한 접종센터
+- 서울시 중구 보건소
+- 서울시 강남구 보건소  
+- 부산시 해운대구 보건소
+
+📅 예약 가능 날짜: 2024년 1월 15일 ~ 2월 28일
+
+⚠️ 주의사항:
+- 접종 당일 신분증 지참
+- 마스크 착용 필수
+- 예약 시간 10분 전 도착
+
+문의: 질병관리청 콜센터 1339`,
+                        isPhishing: false,
+                        warningSigns: [
+                            '정부 공식 도메인 (.go.kr)',
+                            '불필요한 개인정보 요구 없음',
+                            '공식 연락처 제공',
+                            '합리적인 안내사항'
+                        ],
+                        damage: '해당 없음 - 안전한 사이트',
+                        correctChoice: 'safe'
+                    },
+                    {
+                        type: 'sms',
+                        title: '온라인 쇼핑몰 할인 쿠폰',
+                        content: `[🎁G마켓🎁] 
+VIP 고객님께 특별 혜택!
+
+💰 100만원 쿠폰 지급!
+💳 무조건 50% 할인!
+⏰ 오늘 밤 12시까지만!
+
+▼지금 바로 받기▼  
+http://gmarket-coupon.net/get?user=vip947
+
+※ 친구 추천시 추가 30만원 쿠폰!`,
+                        isPhishing: true,
+                        warningSigns: [
+                            '과도한 할인 혜택 (비현실적)',
+                            '가짜 도메인 사용',
+                            '시간 압박으로 성급한 판단 유도',
+                            '개인정보를 받는 사람 없이 VIP 고객이라고 함'
+                        ],
+                        damage: '개인정보 수집, 추가 스팸 발송, 사기 상품 판매',
+                        correctChoice: 'danger'
+                    },
+                    {
+                        type: 'website',
+                        title: '정부24 민원 서비스',
+                        url: 'https://www.gov.kr/portal/service/serviceInfo/394',
+                        content: `정부24 - 주민등록등본 발급
+
+📋 서비스 안내
+- 발급 수수료: 500원
+- 발급 방법: 온라인 즉시 발급
+- 필요 서류: 신분증 확인
+
+🔐 본인 인증
+- 휴대폰 인증
+- 공동인증서
+- 금융인증서
+
+📞 문의처
+- 정부24 고객센터: 1588-2188
+- 행정안전부: 02-2100-3000
+
+※ 개인정보는 민원 처리 목적으로만 사용됩니다.`,
+                        isPhishing: false,
+                        warningSigns: [
+                            '정부 공식 도메인 (.gov.kr)',
+                            '적정한 수수료',
+                            '공식 고객센터 번호',
+                            '개인정보 처리 방침 명시'
+                        ],
+                        damage: '해당 없음 - 안전한 사이트',
+                        correctChoice: 'safe'
+                    }
+                ];
+            }
+            
+            init() {
+                this.updateUI();
+                this.loadLevel();
+            }
+            
+            updateUI() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('lives').textContent = '❤️'.repeat(this.lives);
+                document.getElementById('level').textContent = this.currentLevel + 1;
+                document.getElementById('progress').style.width = `${((this.currentLevel) / this.gameData.length) * 100}%`;
+            }
+            
+            loadLevel() {
+                if (this.currentLevel >= this.gameData.length) {
+                    this.showFinalScore();
+                    return;
+                }
+                
+                const level = this.gameData[this.currentLevel];
+                const content = document.getElementById('content');
+                
+                content.innerHTML = `
+                    <div class="scenario">
+                        <h2>시나리오 ${this.currentLevel + 1}: ${level.title}</h2>
+                        <p>다음 ${level.type === 'sms' ? '문자 메시지' : '웹사이트'}를 확인하고 안전한지 판단해주세요.</p>
+                        
+                        ${level.type === 'sms' ? 
+                            `<div class="sms-message">${level.content.replace(/\n/g, '<br>')}</div>` :
+                            `<div class="website-preview">
+                                <div class="url-bar">🔒 ${level.url}</div>
+                                <div>${level.content.replace(/\n/g, '<br>')}</div>
+                            </div>`
+                        }
+                        
+                        <div class="warning-signs">
+                            <h4>🚨 확인해야 할 의심 요소들:</h4>
+                            <ul>
+                                ${level.warningSigns.map(sign => `<li>${sign}</li>`).join('')}
+                            </ul>
+                        </div>
+                        
+                        <div class="choices">
+                            <button class="choice-btn safe" onclick="game.makeChoice('safe')">
+                                ✅ 안전함<br>
+                                <small>클릭하거나 이용해도 됨</small>
+                            </button>
+                            <button class="choice-btn danger" onclick="game.makeChoice('danger')">
+                                ⚠️ 위험함<br>
+                                <small>스미싱/피싱 사기임</small>
+                            </button>
+                        </div>
+                        
+                        <div id="result"></div>
+                    </div>
+                `;
+            }
+            
+            makeChoice(choice) {
+                const level = this.gameData[this.currentLevel];
+                const isCorrect = choice === level.correctChoice;
+                const resultDiv = document.getElementById('result');
+                
+                if (isCorrect) {
+                    this.score += 100;
+                    resultDiv.innerHTML = `
+                        <div class="result correct">
+                            🎉 정답입니다! (+100점)
+                            <div class="explanation">
+                                <strong>해설:</strong> ${level.isPhishing ? 
+                                    '이것은 스미싱/피싱 사기입니다. ' + level.warningSigns.join(', ') + ' 등의 특징이 있습니다.' :
+                                    '이것은 안전한 사이트입니다. ' + level.warningSigns.join(', ') + ' 등의 신뢰할 수 있는 특징이 있습니다.'
+                                }
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    this.lives--;
+                    resultDiv.innerHTML = `
+                        <div class="result wrong">
+                            ❌ 틀렸습니다! (생명 -1)
+                            <div class="explanation">
+                                <strong>정답:</strong> ${level.isPhishing ? '위험함' : '안전함'}<br>
+                                <strong>이유:</strong> ${level.warningSigns.join(', ')}
+                            </div>
+                            ${level.isPhishing ? `
+                                <div class="damage-report">
+                                    <h4>⚠️ 만약 속았다면 발생할 수 있는 피해:</h4>
+                                    <p>${level.damage}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                resultDiv.innerHTML += `
+                    <button class="next-btn" onclick="game.nextLevel()">
+                        ${this.currentLevel === this.gameData.length - 1 ? '결과 보기' : '다음 문제'}
+                    </button>
+                `;
+                
+                this.updateUI();
+                
+                if (this.lives <= 0) {
+                    setTimeout(() => {
+                        alert('생명을 모두 잃었습니다! 게임이 종료됩니다.');
+                        this.showFinalScore();
+                    }, 1000);
+                }
+            }
+            
+            nextLevel() {
+                this.currentLevel++;
+                this.loadLevel();
+            }
+            
+            showFinalScore() {
+                const content = document.getElementById('content');
+                const percentage = Math.round((this.score / (this.gameData.length * 100)) * 100);
+                
+                let grade, message;
+                if (percentage >= 90) {
+                    grade = 'S급 보안 전문가';
+                    message = '완벽합니다! 온라인 사기를 잘 식별할 수 있습니다.';
+                } else if (percentage >= 70) {
+                    grade = 'A급 보안 의식';
+                    message = '좋습니다! 대부분의 사기를 피할 수 있습니다.';
+                } else if (percentage >= 50) {
+                    grade = 'B급 주의 필요';
+                    message = '보통입니다. 더 주의 깊게 확인하세요.';
+                } else {
+                    grade = 'C급 위험 상태';
+                    message = '주의하세요! 온라인 사기에 취약합니다.';
+                }
+                
+                content.innerHTML = `
+                    <div class="final-score">
+                        <h2>🏆 게임 완료!</h2>
+                        <div style="font-size: 1.5em; margin: 20px 0;">
+                            최종 점수: ${this.score}점 (${percentage}%)
+                        </div>
+                        <div style="font-size: 1.2em; margin: 10px 0;">
+                            등급: ${grade}
+                        </div>
+                        <div style="margin: 20px 0;">
+                            ${message}
+                        </div>
+                        
+                        <div style="text-align: left; background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <h3>📚 스미싱/피싱 예방 수칙</h3>
+                            <ul style="padding-left: 20px; margin-top: 10px;">
+                                <li>의심스러운 링크는 절대 클릭하지 않기</li>
+                                <li>개인정보나 계좌정보 요구 시 의심하기</li>
+                                <li>긴급상황을 조장하는 메시지 주의하기</li>
+                                <li>공식 홈페이지나 고객센터로 직접 확인하기</li>
+                                <li>너무 좋은 조건의 제안은 의심하기</li>
+                                <li>도메인 주소 꼼꼼히 확인하기</li>
+                            </ul>
+                        </div>
+                        
+                        <button class="next-btn" onclick="location.reload()">
+                            🔄 다시 게임하기
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // 게임 시작
+        const game = new PhishingGame();
+    </script>
+</body>
+</html>
